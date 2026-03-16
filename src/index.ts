@@ -8,6 +8,7 @@ import { ProphetCentralServer } from './server/index.js'
 import { ContinuousReasoningEngine } from './reasoning/continuous-reasoning.js'
 import { ProjectGuardian } from './guardian/project-guardian.js'
 import { GlobalOrchestrator } from './orchestrator/global-orchestrator.js'
+import { GlobalKnowledgeConnector } from './evolution/global-knowledge-connector.js'
 import { ResourcePool } from './utils/resource-pool.js'
 import { registerOrchestratorRoutes } from './server/orchestrator-routes.js'
 import { registerMetricsRoutes } from './api/routes/metrics.js'
@@ -115,6 +116,12 @@ async function main() {
     autoOptimize: true
   })
   console.log('  ✓ 闽南语 已注册')
+
+  // 启动全球学习系统
+  console.log('')
+  console.log('🌍 启动全球学习系统...')
+  const globalKnowledge = new GlobalKnowledgeConnector()
+  await globalKnowledge.startContinuousLearning()
 
   // 启动服务器和编排器
   await server.start()
