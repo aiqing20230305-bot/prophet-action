@@ -79,6 +79,43 @@ async function main() {
   // 注册 AI API 路由
   registerAIRoutes(server.getApp(), aiCoordinator)
 
+  // 注册项目到全局编排器
+  console.log('')
+  console.log('📋 注册项目到全局编排器...')
+
+  await globalOrchestrator.registerProject({
+    id: 'videoplay',
+    name: 'videoplay',
+    path: '/Users/zhangjingwei/Desktop/videoplay',
+    type: 'web-app',
+    priority: 'high',
+    monitoringInterval: 10 * 60 * 1000, // 10分钟
+    autoOptimize: true
+  })
+  console.log('  ✓ videoplay 已注册')
+
+  await globalOrchestrator.registerProject({
+    id: 'agentforge',
+    name: 'AgentForge',
+    path: '/Users/zhangjingwei/Desktop/AgentForge',
+    type: 'web-app',
+    priority: 'high',
+    monitoringInterval: 10 * 60 * 1000, // 10分钟
+    autoOptimize: true
+  })
+  console.log('  ✓ AgentForge 已注册')
+
+  await globalOrchestrator.registerProject({
+    id: 'minnan',
+    name: '闽南语',
+    path: '/Users/zhangjingwei/Desktop/闽南语',
+    type: 'web-app',
+    priority: 'medium',
+    monitoringInterval: 15 * 60 * 1000, // 15分钟
+    autoOptimize: true
+  })
+  console.log('  ✓ 闽南语 已注册')
+
   // 启动服务器和编排器
   await server.start()
   await globalOrchestrator.start()
