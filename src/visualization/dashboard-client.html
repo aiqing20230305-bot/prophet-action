@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prophet Swarm Intelligence Dashboard - 群体智能仪表板</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+      background: #0a0e27;
+      color: #e0e6ed;
+      overflow: hidden;
+    }
+
+    #dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      height: 100vh;
+    }
+
+    .panel {
+      background: #141b2d;
+      border: 1px solid #1e2943;
+      border-radius: 8px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e2943;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #00d4ff;
+    }
+
+    .panel-metric {
+      font-size: 13px;
+      color: #8b95a8;
+    }
+
+    .metric-value {
+      font-weight: 600;
+      color: #00d4ff;
+    }
+
+    #header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+    }
+
+    #header h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: #8b95a8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #00d4ff;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-running {
+      background: #00d4ff22;
+      color: #00d4ff;
+    }
+
+    .status-converged {
+      background: #00ff8822;
+      color: #00ff88;
+    }
+
+    .status-completed {
+      background: #ff00ff22;
+      color: #ff00ff;
+    }
+
+    #network-graph {
+      grid-column: 1 / -1;
+      position: relative;
+    }
+
+    #network-graph svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .node {
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .node:hover {
+      stroke-width: 3px;
+    }
+
+    .link {
+      stroke: #1e2943;
+      stroke-opacity: 0.6;
+      transition: all 0.3s;
+    }
+
+    .link:hover {
+      stroke-opacity: 1;
+      stroke-width: 3px;
+    }
+
+    .node-label {
+      font-size: 10px;
+      fill: #8b95a8;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    #opinion-heatmap {
+      position: relative;
+    }
+
+    #confidence-timeline {
+      position: relative;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .axis {
+      font-size: 11px;
+      color: #8b95a8;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: #1e2943;
+    }
+
+    .axis text {
+      fill: #8b95a8;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #1e2943;
+      border: 1px solid #00d4ff;
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .pattern-list {
+      max-height: 100%;
+      overflow-y: auto;
+    }
+
+    .pattern-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: #0a0e27;
+      border-left: 3px solid;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .pattern-item:hover {
+      background: #1e2943;
+      transform: translateX(4px);
+    }
+
+    .pattern-consensus {
+      border-left-color: #00ff88;
+    }
+
+    .pattern-conflict {
+      border-left-color: #ff4444;
+    }
+
+    .pattern-trend {
+      border-left-color: #ffaa00;
+    }
+
+    .pattern-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .pattern-desc {
+      font-size: 11px;
+      color: #8b95a8;
+      line-height: 1.4;
+    }
+
+    .pattern-confidence {
+      font-size: 10px;
+      margin-top: 4px;
+      color: #00d4ff;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0a0e27;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #1e2943;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2a3f5f;
+    }
+  </style>
+</head>
+<body>
+  <div id="dashboard">
+    <!-- Header -->
+    <div id="header" class="panel">
+      <h1>🔮 Prophet Swarm Intelligence Dashboard</h1>
+      <div class="status-bar">
+        <div class="status-item">
+          <span class="status-label">群体</span>
+          <span class="status-value" id="swarm-name">-</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">智能体</span>
+          <span class="status-value" id="agent-count">0</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">步骤</span>
+          <span class="status-value"><span id="current-step">0</span>/<span id="total-steps">0</span></span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">状态</span>
+          <span class="status-badge status-running" id="status">初始化</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Network Graph -->
+    <div id="network-graph" class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🕸️ 智能体交互网络</span>
+        <span class="panel-metric">交互次数: <span class="metric-value" id="interaction-count">0</span></span>
+      </div>
+      <div class="chart-container" id="network-container"></div>
+    </div>
+
+    <!-- Opinion Heatmap -->
+    <div id="opinion-heatmap" class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🌡️ 意见分布热力图</span>
+        <span class="panel-metric">多样性: <span class="metric-value" id="diversity-score">0%</span></span>
+      </div>
+      <div class="chart-container" id="heatmap-container"></div>
+    </div>
+
+    <!-- Confidence Timeline -->
+    <div id="confidence-timeline" class="panel">
+      <div class="panel-header">
+        <span class="panel-title">📈 置信度演化</span>
+        <span class="panel-metric">共识: <span class="metric-value" id="consensus-level">0%</span></span>
+      </div>
+      <div class="chart-container" id="timeline-container"></div>
+    </div>
+
+    <!-- Emergent Patterns -->
+    <div id="emergent-patterns" class="panel">
+      <div class="panel-header">
+        <span class="panel-title">✨ 新兴模式</span>
+        <span class="panel-metric">检测到: <span class="metric-value" id="pattern-count">0</span></span>
+      </div>
+      <div class="pattern-list" id="pattern-list"></div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script>
+    // Dashboard state
+    let dashboardData = {
+      swarmId: null,
+      network: { nodes: [], links: [] },
+      timeline: [],
+      confidence: [],
+      patterns: [],
+      metadata: {}
+    }
+
+    // D3 visualizations
+    let networkSim, networkSvg, networkGroup
+    let heatmapSvg, timelineSvg
+
+    // Initialize dashboard
+    function initDashboard() {
+      initNetworkGraph()
+      initHeatmap()
+      initTimeline()
+    }
+
+    // Network Graph with Force Simulation
+    function initNetworkGraph() {
+      const container = d3.select('#network-container')
+      const width = container.node().clientWidth
+      const height = container.node().clientHeight
+
+      networkSvg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height)
+
+      networkGroup = networkSvg.append('g')
+
+      // Zoom behavior
+      const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', (event) => {
+          networkGroup.attr('transform', event.transform)
+        })
+
+      networkSvg.call(zoom)
+
+      // Force simulation
+      networkSim = d3.forceSimulation()
+        .force('link', d3.forceLink().id(d => d.id).distance(80))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(30))
+    }
+
+    function updateNetworkGraph(data) {
+      if (!data || !data.nodes || data.nodes.length === 0) return
+
+      // Update links
+      const link = networkGroup.selectAll('.link')
+        .data(data.links, d => `${d.source}-${d.target}`)
+
+      link.exit().remove()
+
+      const linkEnter = link.enter().append('line')
+        .attr('class', 'link')
+        .attr('stroke-width', d => d.value * 3)
+
+      link.merge(linkEnter)
+        .attr('stroke', d => {
+          const colors = {
+            persuade: '#00d4ff',
+            support: '#00ff88',
+            oppose: '#ff4444',
+            question: '#ffaa00'
+          }
+          return colors[d.type] || '#1e2943'
+        })
+
+      // Update nodes
+      const node = networkGroup.selectAll('.node')
+        .data(data.nodes, d => d.id)
+
+      node.exit().remove()
+
+      const nodeEnter = node.enter().append('g')
+        .attr('class', 'node')
+        .call(d3.drag()
+          .on('start', dragStart)
+          .on('drag', dragging)
+          .on('end', dragEnd))
+
+      nodeEnter.append('circle')
+        .attr('r', d => 10 + d.value * 10)
+        .attr('fill', d => d3.schemeCategory10[d.group % 10])
+        .attr('stroke', '#141b2d')
+        .attr('stroke-width', 2)
+
+      nodeEnter.append('text')
+        .attr('class', 'node-label')
+        .attr('dy', 25)
+        .text(d => d.label.split(':')[1] || d.label)
+
+      // Restart simulation
+      networkSim.nodes(data.nodes)
+      networkSim.force('link').links(data.links)
+      networkSim.alpha(0.3).restart()
+
+      networkSim.on('tick', () => {
+        networkGroup.selectAll('.link')
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y)
+
+        networkGroup.selectAll('.node')
+          .attr('transform', d => `translate(${d.x},${d.y})`)
+      })
+    }
+
+    function dragStart(event, d) {
+      if (!event.active) networkSim.alphaTarget(0.3).restart()
+      d.fx = d.x
+      d.fy = d.y
+    }
+
+    function dragging(event, d) {
+      d.fx = event.x
+      d.fy = event.y
+    }
+
+    function dragEnd(event, d) {
+      if (!event.active) networkSim.alphaTarget(0)
+      d.fx = null
+      d.fy = null
+    }
+
+    // Opinion Heatmap
+    function initHeatmap() {
+      const container = d3.select('#heatmap-container')
+      const width = container.node().clientWidth
+      const height = container.node().clientHeight
+
+      heatmapSvg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height)
+    }
+
+    function updateHeatmap(data) {
+      // Simple heatmap implementation
+      // Group data by step and agent
+      if (!data || data.length === 0) return
+
+      heatmapSvg.selectAll('*').remove()
+
+      const margin = { top: 20, right: 20, bottom: 30, left: 60 }
+      const width = heatmapSvg.attr('width') - margin.left - margin.right
+      const height = heatmapSvg.attr('height') - margin.top - margin.bottom
+
+      const g = heatmapSvg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+
+      // Get unique agents and steps
+      const agents = Array.from(new Set(data.map(d => d.agentId)))
+      const steps = Array.from(new Set(data.map(d => d.step))).sort((a, b) => a - b)
+
+      const xScale = d3.scaleBand()
+        .domain(steps)
+        .range([0, width])
+        .padding(0.05)
+
+      const yScale = d3.scaleBand()
+        .domain(agents)
+        .range([0, height])
+        .padding(0.05)
+
+      const colorScale = d3.scaleSequential()
+        .domain([-1, 1])
+        .interpolator(d3.interpolateRdYlGn)
+
+      g.selectAll('rect')
+        .data(data)
+        .enter().append('rect')
+        .attr('x', d => xScale(d.step))
+        .attr('y', d => yScale(d.agentId))
+        .attr('width', xScale.bandwidth())
+        .attr('height', yScale.bandwidth())
+        .attr('fill', d => colorScale(d.opinion))
+        .attr('opacity', 0.8)
+    }
+
+    // Confidence Timeline
+    function initTimeline() {
+      const container = d3.select('#timeline-container')
+      const width = container.node().clientWidth
+      const height = container.node().clientHeight
+
+      timelineSvg = container.append('svg')
+        .attr('width', width)
+        .attr('height', height)
+    }
+
+    function updateTimeline(data) {
+      if (!data || data.length === 0) return
+
+      timelineSvg.selectAll('*').remove()
+
+      const margin = { top: 20, right: 20, bottom: 30, left: 50 }
+      const width = timelineSvg.attr('width') - margin.left - margin.right
+      const height = timelineSvg.attr('height') - margin.top - margin.bottom
+
+      const g = timelineSvg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+
+      const xScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.step)])
+        .range([0, width])
+
+      const yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([height, 0])
+
+      // Confidence line
+      const confidenceLine = d3.line()
+        .x(d => xScale(d.step))
+        .y(d => yScale(d.confidence))
+        .curve(d3.curveMonotoneX)
+
+      g.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', '#00d4ff')
+        .attr('stroke-width', 2)
+        .attr('d', confidenceLine)
+
+      // Agreement line
+      const agreementLine = d3.line()
+        .x(d => xScale(d.step))
+        .y(d => yScale(d.agreementRate))
+        .curve(d3.curveMonotoneX)
+
+      g.append('path')
+        .datum(data)
+        .attr('fill', 'none')
+        .attr('stroke', '#00ff88')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '5,5')
+        .attr('d', agreementLine)
+
+      // Axes
+      g.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScale))
+
+      g.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(yScale))
+    }
+
+    // Update patterns
+    function updatePatterns(patterns) {
+      const list = d3.select('#pattern-list')
+
+      const items = list.selectAll('.pattern-item')
+        .data(patterns, d => d.id)
+
+      items.exit().remove()
+
+      const itemsEnter = items.enter().append('div')
+        .attr('class', d => `pattern-item pattern-${d.type}`)
+
+      itemsEnter.append('div')
+        .attr('class', 'pattern-title')
+        .text(d => d.description)
+
+      itemsEnter.append('div')
+        .attr('class', 'pattern-confidence')
+        .text(d => `置信度: ${(d.confidence * 100).toFixed(1)}% | 影响: ${d.affectedAgents.length} 智能体`)
+
+      document.getElementById('pattern-count').textContent = patterns.length
+    }
+
+    // Update metrics
+    function updateMetrics(metadata) {
+      if (!metadata) return
+
+      document.getElementById('swarm-name').textContent = metadata.swarmName || '-'
+      document.getElementById('agent-count').textContent = metadata.agentCount || 0
+      document.getElementById('total-steps').textContent = metadata.totalSteps || 0
+
+      if (metadata.metrics) {
+        document.getElementById('consensus-level').textContent =
+          (metadata.metrics.consensusLevel * 100).toFixed(1) + '%'
+        document.getElementById('diversity-score').textContent =
+          (metadata.metrics.diversityScore * 100).toFixed(1) + '%'
+        document.getElementById('interaction-count').textContent =
+          metadata.metrics.interactionCount || 0
+      }
+
+      const statusBadge = document.getElementById('status')
+      statusBadge.textContent = {
+        'initializing': '初始化',
+        'running': '运行中',
+        'converged': '已收敛',
+        'completed': '已完成'
+      }[metadata.status] || metadata.status
+
+      statusBadge.className = 'status-badge status-' + metadata.status
+    }
+
+    // Load data (simulate WebSocket connection)
+    function loadDashboardData() {
+      // In production, this would connect to WebSocket
+      // For now, simulate with mock data
+
+      const mockData = {
+        network: {
+          nodes: [
+            { id: 'agent-1', group: 0, value: 0.8, label: 'developer:senior' },
+            { id: 'agent-2', group: 0, value: 0.6, label: 'developer:junior' },
+            { id: 'agent-3', group: 1, value: 0.9, label: 'user:power' },
+            { id: 'agent-4', group: 2, value: 0.7, label: 'stakeholder:pm' }
+          ],
+          links: [
+            { source: 'agent-1', target: 'agent-2', value: 0.8, type: 'persuade' },
+            { source: 'agent-2', target: 'agent-3', value: 0.6, type: 'question' },
+            { source: 'agent-3', target: 'agent-4', value: 0.9, type: 'support' }
+          ]
+        },
+        timeline: [],
+        confidence: [],
+        patterns: [],
+        metadata: {
+          swarmName: 'feature-prediction',
+          agentCount: 4,
+          totalSteps: 50,
+          status: 'running',
+          metrics: {
+            consensusLevel: 0.75,
+            diversityScore: 0.35,
+            interactionCount: 12
+          }
+        }
+      }
+
+      // Generate mock timeline data
+      for (let i = 0; i < 30; i++) {
+        mockData.confidence.push({
+          step: i,
+          confidence: 0.5 + Math.random() * 0.3,
+          agreementRate: 0.6 + Math.random() * 0.2,
+          diversityScore: 0.4 - i * 0.01
+        })
+      }
+
+      updateDashboard(mockData)
+    }
+
+    function updateDashboard(data) {
+      updateNetworkGraph(data.network)
+      updateTimeline(data.confidence)
+      updatePatterns(data.patterns)
+      updateMetrics(data.metadata)
+    }
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+      initDashboard()
+      loadDashboardData()
+    })
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      initDashboard()
+      if (dashboardData.network) {
+        updateDashboard(dashboardData)
+      }
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prophet Quick Connect</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo {
+      font-size: 64px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      background: white;
+    }
+
+    button {
+      width: 100%;
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .or {
+      text-align: center;
+      margin: 30px 0;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .command-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .command-box .label {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+
+    .command-box .command {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .success-message {
+      background: rgba(46, 213, 115, 0.2);
+      border: 2px solid rgba(46, 213, 115, 0.5);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .config-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🔮</div>
+    <h1>Prophet</h1>
+    <div class="subtitle">快速连接到四维生物中枢</div>
+
+    <form id="connectForm">
+      <div class="form-group">
+        <label>项目名称</label>
+        <input type="text" id="projectName" placeholder="my-awesome-project" required>
+      </div>
+
+      <div class="form-group">
+        <label>项目路径</label>
+        <input type="text" id="projectPath" placeholder="/Users/你的用户名/projects/my-project" required>
+      </div>
+
+      <div class="form-group">
+        <label>项目类型</label>
+        <select id="projectType">
+          <option value="web-app">Web App (React/Vue/etc)</option>
+          <option value="api">API Server (Express/Fastify)</option>
+          <option value="cli">CLI Tool</option>
+          <option value="library">Library/Package</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <button type="submit">🚀 立即连接</button>
+    </form>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px;">正在连接...</p>
+    </div>
+
+    <div class="success-message" id="successMessage">
+      <div style="font-size: 32px; text-align: center; margin-bottom: 10px;">✅</div>
+      <h3 style="text-align: center; margin-bottom: 15px;">连接成功！</h3>
+
+      <div>
+        <strong>Project ID:</strong>
+        <div class="config-box" id="projectId"></div>
+      </div>
+
+      <button class="copy-btn" onclick="copyConfig()">📋 复制完整配置</button>
+
+      <div class="config-box" id="fullConfig" style="display: none;"></div>
+    </div>
+
+    <div class="or">或者</div>
+
+    <div class="command-box">
+      <div class="label">命令行快速连接:</div>
+      <div class="command">prophet connect</div>
+      <div class="label" style="margin-top: 15px;">或者更短:</div>
+      <div class="command">pc</div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('connectForm');
+    const loading = document.getElementById('loading');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('projectName').value;
+      const path = document.getElementById('projectPath').value;
+      const type = document.getElementById('projectType').value;
+
+      // 显示加载
+      form.style.display = 'none';
+      loading.classList.add('show');
+
+      try {
+        const response = await fetch('http://localhost:3001/api/projects/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, path, type })
+        });
+
+        if (!response.ok) {
+          throw new Error('注册失败');
+        }
+
+        const data = await response.json();
+
+        // 显示成功
+        loading.classList.remove('show');
+        successMessage.classList.add('show');
+
+        // 显示配置
+        document.getElementById('projectId').textContent = data.projectId;
+
+        const config = {
+          serverUrl: 'http://localhost:3001',
+          projectId: data.projectId,
+          apiKey: data.apiKey,
+          projectName: name,
+          projectType: type,
+        };
+
+        window.prophetConfig = config;
+        document.getElementById('fullConfig').textContent = JSON.stringify(config, null, 2);
+
+        console.log('🔮 Prophet配置:', config);
+        console.log('');
+        console.log('保存以下配置到项目的 .prophetrc.json:');
+        console.log(JSON.stringify(config, null, 2));
+
+      } catch (error) {
+        alert('连接失败: ' + error.message);
+        loading.classList.remove('show');
+        form.style.display = 'block';
+      }
+    });
+
+    function copyConfig() {
+      const config = window.prophetConfig;
+      const text = JSON.stringify(config, null, 2);
+
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ 已复制！';
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    // 自动填充当前路径提示
+    window.addEventListener('load', () => {
+      const pathInput = document.getElementById('projectPath');
+      pathInput.placeholder = '例如: ' + window.location.pathname.split('/').slice(0, -1).join('/');
+    });
+  </script>
+</body>
+</html>
