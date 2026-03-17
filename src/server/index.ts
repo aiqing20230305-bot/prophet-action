@@ -22,6 +22,7 @@ export class ProphetCentralServer {
   private store = memoryStore
   private projects: Map<string, any> = new Map()
   private port: number
+  private globalOrchestrator?: any
 
   constructor(port: number = 3000) {
     this.port = port
@@ -29,6 +30,10 @@ export class ProphetCentralServer {
 
     console.log('🔮 Prophet Central Server initializing...')
     console.log('   使用内存存储模式')
+  }
+
+  setGlobalOrchestrator(orchestrator: any): void {
+    this.globalOrchestrator = orchestrator
   }
 
   async initialize(): Promise<void> {
@@ -68,12 +73,16 @@ export class ProphetCentralServer {
 
     // 健康检查
     this.app.get('/health', async () => {
+      const orchestratorStatus = this.globalOrchestrator
+        ? this.globalOrchestrator.getStatus()
+        : null
+
       return {
         status: 'ok',
         timestamp: new Date(),
         projects: {
-          totalProjects: this.projects.size,
-          activeProjects: Array.from(this.projects.values()).filter(
+          totalProjects: orchestratorStatus?.projectCount || this.projects.size,
+          activeProjects: orchestratorStatus?.activeProjects || Array.from(this.projects.values()).filter(
             p => p.status === 'active'
           ).length,
           totalExecutions: await this.store.countExecutions(),

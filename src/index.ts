@@ -47,6 +47,9 @@ async function main() {
     resourcePool,
   })
 
+  // 将 GlobalOrchestrator 设置到 Server（用于 /health endpoint）
+  server.setGlobalOrchestrator(globalOrchestrator)
+
   // 启动 AI 协调器
   console.log('')
   const aiCoordinator = new AICoordinator({
