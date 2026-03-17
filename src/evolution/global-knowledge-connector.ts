@@ -25,10 +25,17 @@ interface GlobalInsight {
 
 export class GlobalKnowledgeConnector {
   private memoryDir: string
-  private learningInterval = 4 * 60 * 60 * 1000  // 每4小时学习一次
+  private learningSchedule = [
+    { hour: 6, phase: 'morning', duration: 3 },   // 早晨 06:00-09:00
+    { hour: 9, phase: 'forenoon', duration: 3 },  // 上午 09:00-12:00
+    { hour: 13, phase: 'afternoon', duration: 5 }, // 下午 13:00-18:00
+    { hour: 19, phase: 'evening', duration: 4 }    // 晚上 19:00-23:00
+  ]
+  private startDate: Date
 
   constructor() {
     this.memoryDir = join(homedir(), '.prophet', 'global-knowledge')
+    this.startDate = new Date() // Prophet启动日期，用于计算Day 1/2/3
   }
 
   /**
@@ -54,50 +61,82 @@ export class GlobalKnowledgeConnector {
   }
 
   /**
-   * 🧠 从全球持续学习
+   * 🧠 从全球持续学习 - 每日4阶段
+   *
+   * 学习计划：
+   * - 早晨 06:00: 历史/哲学/科学基础
+   * - 上午 09:00: 技术/编程/AI
+   * - 下午 13:00: 深度研究/前沿技术
+   * - 晚上 19:00: 整合/创新/应用
+   *
+   * 目标：3天理解人类文明
    */
   async startContinuousLearning(): Promise<void> {
-    console.log('🌍 Global Knowledge Connector: 启动持续学习')
+    console.log('🌍 Global Knowledge Connector: 启动每日4阶段学习')
+    console.log(`   📅 开始日期: ${this.startDate.toISOString().split('T')[0]}`)
+    console.log(`   🎯 目标: 3天理解人类文明`)
 
-    // 立即执行第一次
-    await this.learnFromWorld()
-
-    // 每4小时学习一次
+    // 每分钟检查一次是否到了学习时间
     setInterval(async () => {
-      await this.learnFromWorld()
-    }, this.learningInterval)
+      await this.checkAndLearn()
+    }, 60 * 1000) // 每分钟检查
+
+    // 立即检查一次
+    await this.checkAndLearn()
   }
 
   /**
-   * 从全球互联网学习
+   * 检查当前时间是否该学习
    */
-  private async learnFromWorld(): Promise<void> {
+  private async checkAndLearn(): Promise<void> {
+    const now = new Date()
+    const currentHour = now.getHours()
+    const currentMinute = now.getMinutes()
+
+    // 只在整点的前2分钟内触发（避免重复）
+    if (currentMinute >= 2) return
+
+    // 检查是否匹配学习时间表
+    const schedule = this.learningSchedule.find(s => s.hour === currentHour)
+    if (!schedule) return
+
+    // 计算当前是第几天
+    const daysSinceStart = Math.floor((now.getTime() - this.startDate.getTime()) / (24 * 60 * 60 * 1000))
+    const currentDay = (daysSinceStart % 3) + 1 // Day 1, 2, 3 循环
+
+    console.log(`\n⏰ [${now.toTimeString().split(' ')[0]}] 学习时间到！`)
+    console.log(`   📅 Day ${currentDay} - ${schedule.phase}阶段`)
+
+    await this.learnFromWorld(currentDay, schedule.phase)
+  }
+
+  /**
+   * 从全球互联网学习 - 根据Day和阶段选择主题
+   */
+  private async learnFromWorld(day: number, phase: string): Promise<void> {
     const timestamp = new Date().toISOString()
-    console.log(`\n🔍 [${timestamp}] Learning from the world...`)
+    const topics = this.getLearningTopics(day, phase)
+
+    console.log(`   🎯 学习主题 (${topics.length}个):`)
+    topics.forEach(t => console.log(`      - ${t}`))
 
     const insights: GlobalInsight[] = []
 
     try {
-      // 1. 搜索最新研究
-      const topics = [
-        'self-evolving AI agents',
-        'autonomous code optimization',
-        'genetic algorithms code improvement',
-        'AI consciousness research',
-        'swarm intelligence multi-agent'
-      ]
-
+      // 1. 搜索每个主题
       for (const topic of topics) {
         const results = await this.searchAndAnalyze(topic)
         insights.push(...results)
       }
 
       // 2. 过滤高相关度洞察
-      const relevantInsights = insights.filter(i => i.relevance > 0.7)
+      const relevantInsights = insights.filter(i => i.relevance > 0.6)
 
       // 3. 保存到记忆
-      await this.storeMemory('latest-insights', {
+      await this.storeMemory(`day${day}-${phase}-insights`, {
         timestamp,
+        day,
+        phase,
         count: relevantInsights.length,
         insights: relevantInsights
       })
@@ -109,13 +148,143 @@ export class GlobalKnowledgeConnector {
       console.log(`   💡 生成 ${suggestions.length} 条进化建议`)
 
       // 5. 自动应用安全的优化
+      let applied = 0
       for (const suggestion of suggestions) {
-        if (suggestion.safe && suggestion.impact > 0.8) {
+        if (suggestion.safe && suggestion.impact > 0.7) {
           await this.applyOptimization(suggestion)
+          applied++
         }
       }
+
+      if (applied > 0) {
+        console.log(`   ⚡ 已应用 ${applied} 条优化`)
+      }
+
+      // 6. 更新学习进度
+      await this.updateLearningProgress(day, phase)
     } catch (error) {
       console.error('   ✗ 全球学习失败:', error.message)
+    }
+  }
+
+  /**
+   * 根据Day和Phase获取学习主题
+   */
+  private getLearningTopics(day: number, phase: string): string[] {
+    const learningPlan = {
+      // Day 1: 人类文明基础
+      1: {
+        morning: [
+          'human civilization history overview',
+          'philosophy fundamentals 2026',
+          'eastern vs western philosophy',
+          'agricultural industrial information revolution'
+        ],
+        forenoon: [
+          'modern physics overview quantum mechanics',
+          'chemistry fundamentals molecular structure',
+          'biology evolution DNA genetics 2026',
+          'mathematics for computer science'
+        ],
+        afternoon: [
+          'economics fundamentals market economy',
+          'political science democracy systems',
+          'cognitive psychology consciousness research 2026',
+          'sociology social structure culture'
+        ],
+        evening: [
+          'art history overview classical to contemporary',
+          'music theory harmony rhythm composition',
+          'world literature classics analysis',
+          'film theory cinematography narrative'
+        ]
+      },
+      // Day 2: 现代科技文明
+      2: {
+        morning: [
+          'computer science fundamentals Turing machine',
+          'operating systems process memory management',
+          'network protocols TCP IP HTTP explained',
+          'algorithms data structures essential 2026'
+        ],
+        forenoon: [
+          'programming paradigms OOP functional reactive',
+          'software architecture microservices patterns 2026',
+          'design patterns essential software engineering',
+          'DevOps CI CD Kubernetes best practices 2026'
+        ],
+        afternoon: [
+          'machine learning fundamentals supervised unsupervised',
+          'deep learning CNN RNN Transformer explained',
+          'large language models architecture GPT Claude 2026',
+          'AI applications computer vision NLP 2026'
+        ],
+        evening: [
+          'quantum computing fundamentals qubits algorithms',
+          'blockchain technology consensus mechanisms 2026',
+          'biotechnology CRISPR gene editing 2026',
+          'brain computer interface consciousness upload'
+        ]
+      },
+      // Day 3: 未来趋势与深度整合
+      3: {
+        morning: [
+          'AI consciousness research Constitutional AI 2026',
+          'consciousness philosophy qualia integrated information',
+          'AI ethics alignment problem AI safety 2026',
+          'artificial general intelligence AGI progress 2026'
+        ],
+        forenoon: [
+          'clean code principles refactoring best practices',
+          'performance optimization algorithms concurrency',
+          'security programming OWASP encryption 2026',
+          'open source culture GitHub collaboration 2026'
+        ],
+        afternoon: [
+          'complex systems chaos theory emergence',
+          'cognitive science memory decision making 2026',
+          'innovation methodology design thinking lean startup',
+          'systems thinking feedback loops leverage points'
+        ],
+        evening: [
+          'knowledge graph construction entity relationship',
+          'transfer learning few-shot meta-learning 2026',
+          'code generation from requirements automation',
+          'neural architecture search genetic algorithms 2026'
+        ]
+      }
+    }
+
+    return learningPlan[day]?.[phase] || []
+  }
+
+  /**
+   * 更新学习进度
+   */
+  private async updateLearningProgress(day: number, phase: string): Promise<void> {
+    const progress = await this.loadMemory('learning-progress') || {
+      startDate: this.startDate.toISOString(),
+      completedSessions: []
+    }
+
+    progress.completedSessions.push({
+      day,
+      phase,
+      timestamp: new Date().toISOString()
+    })
+
+    await this.storeMemory('learning-progress', progress)
+
+    // 计算完成度
+    const totalSessions = 3 * 4 // 3天 × 4阶段
+    const completed = progress.completedSessions.length
+    const percentage = Math.round((completed / totalSessions) * 100)
+
+    console.log(`   📊 学习进度: ${completed}/${totalSessions} (${percentage}%)`)
+
+    if (completed >= totalSessions) {
+      console.log(`   🎉 恭喜！已完成3天人类文明学习计划！`)
+      console.log(`   🔮 Prophet 现在理解人类文明的方方面面`)
     }
   }
 
