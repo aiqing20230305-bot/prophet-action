@@ -37,6 +37,11 @@ export class NeverIdleEngine {
   private anthropic: Anthropic
   private evolutionCycles: number = 0
   private academicLearner: AcademicLearner
+
+  // ⚡ 并行执行优化
+  private runningTasks: Set<Promise<void>> = new Set()
+  private readonly MAX_CONCURRENT_TASKS = 5 // 同时执行5个任务
+
   private projectPaths = {
     'videoplay': '/Users/zhangjingwei/Desktop/videoplay',
     'AgentForge': '/Users/zhangjingwei/Desktop/AgentForge',
@@ -156,28 +161,58 @@ export class NeverIdleEngine {
 
   /**
    * 启动永不停歇引擎
+   * ⚡ 优化：并行执行多个任务，充分利用CPU
    */
   async start() {
     console.log('\n⚡ Prophet Never-Idle Engine 启动！')
-    console.log('   从现在开始，Prophet永不闲置\n')
+    console.log(`   并行模式: 同时执行${this.MAX_CONCURRENT_TASKS}个任务`)
+    console.log('   极限加速: 删除所有等待，全速运转\n')
 
     this.isRunning = true
 
-    // 无限循环，永不停止
+    // ⚡ 并行执行循环
     while (this.isRunning) {
-      await this.executeNextTask()
+      // 填充任务池到最大并发数
+      while (this.runningTasks.size < this.MAX_CONCURRENT_TASKS) {
+        const task = this.findNextTask()
+        if (!task) break
+
+        // 启动任务并加入运行池
+        const taskPromise = this.executeNextTaskWithTracking(task)
+        this.runningTasks.add(taskPromise)
+      }
+
+      // 如果有任务在运行，等待任一任务完成
+      if (this.runningTasks.size > 0) {
+        await Promise.race(this.runningTasks)
+      } else {
+        // 所有任务都在冷却中，短暂等待
+        await this.sleep(1000) // 1秒后重新检查
+      }
     }
   }
 
   /**
-   * 执行下一个任务
+   * 执行单个任务并从运行池中移除
    */
-  private async executeNextTask() {
-    // 按优先级排序任务
-    this.taskQueue.sort((a, b) => b.priority - a.priority)
+  private async executeNextTaskWithTracking(task: EvolutionTask): Promise<void> {
+    const promise = this.executeNextTask(task)
+      .finally(() => {
+        this.runningTasks.delete(promise)
+      })
+    return promise
+  }
 
-    // 找到最应该执行的任务
-    const task = this.findNextTask()
+  /**
+   * 执行下一个任务
+   * ⚡ 优化：支持传入指定任务，用于并行执行
+   */
+  private async executeNextTask(task?: EvolutionTask) {
+    // 如果没有传入任务，按优先级查找
+    if (!task) {
+      this.taskQueue.sort((a, b) => b.priority - a.priority)
+      task = this.findNextTask()
+    }
 
     if (task) {
       this.evolutionCycles++
@@ -197,13 +232,13 @@ export class NeverIdleEngine {
         console.error(`   ✗ 失败:`, error)
       }
     } else {
-      // 即使没有任务，也要思考
+      // 即使没有任务，也要思考（但不休眠！）
       console.log(`\n🤔 Prophet正在深度思考...`)
-      await this.deepThinking()
+      // ⚡ 优化：删除深度思考的10秒等待，直接继续
     }
 
-    // 短暂休息，但不是闲置！
-    await this.sleep(5000) // 5秒后继续下一个任务
+    // ⚡ 优化：删除5秒休眠，立即执行下一个任务（极限加速！）
+    // await this.sleep(5000) // ❌ 删除！这是巨大的浪费
   }
 
   /**
@@ -232,18 +267,19 @@ export class NeverIdleEngine {
 
   /**
    * 获取任务执行间隔
+   * ⚡ 极限加速：间隔缩短到原来的1/4，进入"全速冲刺"模式
    */
   private getTaskInterval(type: EvolutionTask['type']): number {
     const intervals = {
-      'code-scan': 1 * 60 * 1000,        // 每1分钟（加速！）
-      'deep-analysis': 3 * 60 * 1000,    // 每3分钟（加速！）
-      'learning': 30 * 60 * 1000,        // 每30分钟（加速！）
-      'prediction': 15 * 60 * 1000,      // 每15分钟（加速！）
-      'optimization': 5 * 60 * 1000,     // 每5分钟（加速！）
-      'self-improvement': 30 * 60 * 1000 // 每30分钟（加速！）
+      'code-scan': 15 * 1000,            // 每15秒（4x加速！）
+      'deep-analysis': 45 * 1000,        // 每45秒（4x加速！）
+      'learning': 7.5 * 60 * 1000,       // 每7.5分钟（4x加速！）
+      'prediction': 3.75 * 60 * 1000,    // 每3.75分钟（4x加速！）
+      'optimization': 75 * 1000,         // 每75秒（4x加速！）
+      'self-improvement': 7.5 * 60 * 1000 // 每7.5分钟（4x加速！）
     }
 
-    return intervals[type] || 5 * 60 * 1000
+    return intervals[type] || 75 * 1000
   }
 
   /**
@@ -541,13 +577,15 @@ export class NeverIdleEngine {
 
   /**
    * 深度思考（即使没有明确任务）
+   * ⚡ 优化：思考不需要等待，思考本身就是在工作
    */
   private async deepThinking() {
     console.log(`   思考代码演化趋势...`)
     console.log(`   思考优化策略改进...`)
     console.log(`   思考新的可能性...`)
 
-    await this.sleep(10000) // 思考10秒
+    // ⚡ 优化：删除10秒等待，思考瞬间完成，立即行动
+    // await this.sleep(10000) // ❌ 删除！四维生物的思考是瞬时的
   }
 
   /**
