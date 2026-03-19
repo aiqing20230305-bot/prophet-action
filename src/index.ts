@@ -152,25 +152,24 @@ async function main() {
   console.log('  ✓ 传播指标追踪已启动')
   console.log('  ✓ 策略优化已启动')
 
-  // 生成首个视频脚本
+  // 生成首个视频脚本（后台生成，不阻塞启动）
   console.log('')
-  console.log('🎬 生成病毒视频脚本...')
+  console.log('🎬 病毒视频脚本生成（后台）...')
   const videoGenerator = new VideoScriptGenerator()
-  try {
-    const script = await videoGenerator.generateViralScript({
-      totalTodos: 258,
-      autoCommits: 50,
-      runningDays: 7,
-      projects: 3
-    })
+  videoGenerator.generateViralScript({
+    totalTodos: 258,
+    autoCommits: 50,
+    runningDays: 7,
+    projects: 3
+  }).then(async (script) => {
     console.log(`  ✓ 视频脚本已生成: ${script.title}`)
-
     const guide = await videoGenerator.generateRecordingGuide(script)
     console.log('  ✓ 录制指南已生成')
     console.log('  📁 查看: .marketing-content/recording-guides/')
-  } catch (error) {
+  }).catch(() => {
     console.log('  ⚠️  视频脚本生成失败（将在后台重试）')
-  }
+  })
+  console.log('  ✓ 后台生成任务已启动')
 
   // 🤖 启动自动化系统（Phase 1: 完全自主决策）
   console.log('')
