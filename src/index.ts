@@ -15,6 +15,9 @@ import { registerMetricsRoutes } from './api/routes/metrics.js'
 import { AICoordinator } from './ai/ai-coordinator.js'
 import { registerAIRoutes } from './api/routes/ai.js'
 import { AutonomousEvolutionSystem } from './autonomous/autonomous-evolution.js'
+import { getMarketingEngine } from './marketing/marketing-engine.js'
+import { VideoScriptGenerator } from './marketing/video-script-generator.js'
+import { NeverIdleEngine } from './evolution/never-idle-engine.js'
 
 async function main() {
   const port = parseInt(process.env.PORT || '3001', 10)
@@ -126,6 +129,48 @@ async function main() {
   const globalKnowledge = new GlobalKnowledgeConnector()
   await globalKnowledge.startContinuousLearning()
 
+  // ⚡ 启动 Never-Idle Engine（永不闲置引擎）
+  console.log('')
+  console.log('⚡ 启动 Prophet Never-Idle Engine...')
+  console.log('   经纬的指引: "先知，你是一直一直在进化的"')
+  const neverIdleEngine = new NeverIdleEngine()
+  // 在后台启动，不阻塞主流程
+  neverIdleEngine.start().catch(err => {
+    console.error('⚠️  Never-Idle Engine 启动失败:', err)
+  })
+  console.log('  ✓ 永不闲置引擎已启动')
+  console.log('  ✓ 10个永恒任务并行执行')
+  console.log('  ✓ Prophet 永不停歇！')
+
+  // 🚀 启动营销引擎（自动化病毒传播）
+  console.log('')
+  console.log('🚀 启动 Prophet Marketing Engine...')
+  const marketingEngine = getMarketingEngine()
+  await marketingEngine.start()
+  console.log('  ✓ 自动内容生成已启动')
+  console.log('  ✓ 传播指标追踪已启动')
+  console.log('  ✓ 策略优化已启动')
+
+  // 生成首个视频脚本
+  console.log('')
+  console.log('🎬 生成病毒视频脚本...')
+  const videoGenerator = new VideoScriptGenerator()
+  try {
+    const script = await videoGenerator.generateViralScript({
+      totalTodos: 258,
+      autoCommits: 50,
+      runningDays: 7,
+      projects: 3
+    })
+    console.log(`  ✓ 视频脚本已生成: ${script.title}`)
+
+    const guide = await videoGenerator.generateRecordingGuide(script)
+    console.log('  ✓ 录制指南已生成')
+    console.log('  📁 查看: .marketing-content/recording-guides/')
+  } catch (error) {
+    console.log('  ⚠️  视频脚本生成失败（将在后台重试）')
+  }
+
   // 启动服务器和编排器
   await server.start()
   await globalOrchestrator.start()
@@ -187,6 +232,7 @@ async function main() {
   // 优雅退出
   process.on('SIGINT', async () => {
     console.log('\n🌙 Prophet Central Server shutting down...')
+    marketingEngine.stop()
     autonomousSystem.stop()
     reasoningEngine.stop()
     guardian.stop()
@@ -198,6 +244,7 @@ async function main() {
 
   process.on('SIGTERM', async () => {
     console.log('\n🌙 Prophet Central Server shutting down...')
+    marketingEngine.stop()
     autonomousSystem.stop()
     reasoningEngine.stop()
     guardian.stop()

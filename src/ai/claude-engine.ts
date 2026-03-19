@@ -84,7 +84,7 @@ export interface AIResponse {
 export class ClaudeEngine extends EventEmitter {
   private client: Anthropic
   private tokenTracker = getGlobalTokenTracker()
-  private model = 'claude-sonnet-4-20250514'
+  private model = 'claude-sonnet-4-5-20250929'
   private maxTokens = 8000
 
   constructor(apiKey?: string) {
