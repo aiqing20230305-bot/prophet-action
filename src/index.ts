@@ -18,6 +18,7 @@ import { AutonomousEvolutionSystem } from './autonomous/autonomous-evolution.js'
 import { getMarketingEngine } from './marketing/marketing-engine.js'
 import { VideoScriptGenerator } from './marketing/video-script-generator.js'
 import { NeverIdleEngine } from './evolution/never-idle-engine.js'
+import { AutomationOrchestrator } from './automation/automation-orchestrator.js'
 
 async function main() {
   const port = parseInt(process.env.PORT || '3001', 10)
@@ -170,6 +171,49 @@ async function main() {
   } catch (error) {
     console.log('  ⚠️  视频脚本生成失败（将在后台重试）')
   }
+
+  // 🤖 启动自动化系统（Phase 1: 完全自主决策）
+  console.log('')
+  console.log('🤖 启动 Prophet 自动化系统（Phase 1）...')
+  console.log('   目标: 删除所有人工审批点')
+
+  // videoplay自动化
+  const videplayAutomation = new AutomationOrchestrator({
+    projectPath: '/Users/zhangjingwei/Desktop/videoplay',
+    projectName: 'videoplay',
+    enableAutoMerge: true,
+    enableAutoRollback: true,
+    checkInterval: 2 * 60 * 1000,  // 每2分钟检查
+    rollbackObservationPeriod: 5 * 60 * 1000  // 5分钟观察期
+  })
+  await videplayAutomation.start()
+
+  // AgentForge自动化
+  const agentforgeAutomation = new AutomationOrchestrator({
+    projectPath: '/Users/zhangjingwei/Desktop/AgentForge',
+    projectName: 'AgentForge',
+    enableAutoMerge: true,
+    enableAutoRollback: true,
+    checkInterval: 2 * 60 * 1000,
+    rollbackObservationPeriod: 5 * 60 * 1000
+  })
+  await agentforgeAutomation.start()
+
+  // 闽南语自动化
+  const minnanAutomation = new AutomationOrchestrator({
+    projectPath: '/Users/zhangjingwei/Desktop/闽南语',
+    projectName: '闽南语',
+    enableAutoMerge: true,
+    enableAutoRollback: true,
+    checkInterval: 3 * 60 * 1000,  // 每3分钟检查（低优先级）
+    rollbackObservationPeriod: 5 * 60 * 1000
+  })
+  await minnanAutomation.start()
+
+  console.log('  ✓ 3个项目自动化系统已启动')
+  console.log('  ✓ Auto-Merge: 自动合并分支')
+  console.log('  ✓ Auto-Rollback: 自动回滚问题commit')
+  console.log('  ✓ 人工干预需求: 0次/天 → 完全自主！')
 
   // 启动服务器和编排器
   await server.start()
