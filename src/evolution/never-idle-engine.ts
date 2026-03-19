@@ -398,7 +398,7 @@ export class NeverIdleEngine {
   }
 
   /**
-   * 扫描单个文件
+   * 扫描单个文件 - 优化版（智能过滤）
    */
   private scanFile(filePath: string, info: ProjectInfo, basePath: string) {
     try {
@@ -408,40 +408,62 @@ export class NeverIdleEngine {
 
       const relativePath = relative(basePath, filePath)
 
+      // 跳过测试文件和配置文件
+      const isTestFile = relativePath.match(/\.(test|spec)\.(ts|js|tsx|jsx)$/)
+      const isConfigFile = relativePath.match(/(config|setup)\.(ts|js)$/)
+
       // 检测问题
       lines.forEach((line, index) => {
         const lineNum = index + 1
 
-        // 检测 TODO/FIXME
+        // 检测 TODO/FIXME - 带优先级判断
         if (line.match(/\/\/\s*(TODO|FIXME|XXX|HACK)/i)) {
           const match = line.match(/\/\/\s*(TODO|FIXME|XXX|HACK):?\s*(.+)/i)
-          info.issues.push({
-            type: match ? match[1].toUpperCase() : 'TODO',
-            file: relativePath,
-            line: lineNum,
-            message: match ? match[2].trim() : line.trim()
-          })
+          const type = match ? match[1].toUpperCase() : 'TODO'
+          const message = match ? match[2].trim() : line.trim()
+
+          // 判断优先级
+          const isUrgent = message.match(/(URGENT|紧急|CRITICAL|BUG|ERROR)/i)
+          const priority = isUrgent ? 'HIGH' : (type === 'FIXME' ? 'MEDIUM' : 'LOW')
+
+          // 只记录中高优先级，或者FIXME类型
+          if (priority !== 'LOW' || type === 'FIXME') {
+            info.issues.push({
+              type: `${type}_${priority}`,
+              file: relativePath,
+              line: lineNum,
+              message
+            })
+          }
         }
 
-        // 检测 console.log (仅JS/TS文件)
+        // 检测 console.log - 智能过滤
         if ((filePath.endsWith('.ts') || filePath.endsWith('.js') ||
              filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) &&
             line.match(/console\.(log|debug|warn)/)) {
-          info.issues.push({
-            type: 'CONSOLE_LOG',
-            file: relativePath,
-            line: lineNum,
-            message: 'Found console.log statement'
-          })
+
+          // 跳过测试文件和配置文件
+          if (!isTestFile && !isConfigFile) {
+            // 只在生产代码中标记
+            const isInSrcOrApp = relativePath.match(/^(src|app|apps|packages)\//)
+            if (isInSrcOrApp) {
+              info.issues.push({
+                type: 'CONSOLE_LOG',
+                file: relativePath,
+                line: lineNum,
+                message: 'Found console.log in production code'
+              })
+            }
+          }
         }
       })
 
-      // 检测超大文件 (>500行)
-      if (lines.length > 500) {
+      // 检测超大文件 - 提高阈值
+      if (lines.length > 800) {
         info.issues.push({
           type: 'LARGE_FILE',
           file: relativePath,
-          message: `File is too large (${lines.length} lines)`
+          message: `File is too large (${lines.length} lines, threshold: 800)`
         })
       }
     } catch (error: any) {
