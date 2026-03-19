@@ -19,6 +19,7 @@ import { getMarketingEngine } from './marketing/marketing-engine.js'
 import { VideoScriptGenerator } from './marketing/video-script-generator.js'
 import { NeverIdleEngine } from './evolution/never-idle-engine.js'
 import { AutomationOrchestrator } from './automation/automation-orchestrator.js'
+import { IntelligentCoordinator } from './intelligence/intelligent-coordinator.js'
 
 async function main() {
   const port = parseInt(process.env.PORT || '3001', 10)
@@ -213,6 +214,77 @@ async function main() {
   console.log('  ✓ Auto-Merge: 自动合并分支')
   console.log('  ✓ Auto-Rollback: 自动回滚问题commit')
   console.log('  ✓ 人工干预需求: 0次/天 → 完全自主！')
+
+  // 🧠 启动智能协调系统（Phase 3: 智能自适应）
+  console.log('')
+  console.log('🧠 启动 Prophet 智能协调系统（Phase 3）...')
+  console.log('   目标: 智能频率调整 + AI优先级队列 + 资源自动调配')
+
+  const intelligentCoordinator = new IntelligentCoordinator({ useAI: true })
+
+  // 注册三个项目到智能协调器
+  intelligentCoordinator.registerProject({
+    projectId: 'videoplay',
+    projectName: 'videoplay',
+    projectPath: '/Users/zhangjingwei/Desktop/videoplay',
+    priority: 'high'
+  })
+
+  intelligentCoordinator.registerProject({
+    projectId: 'agentforge',
+    projectName: 'AgentForge',
+    projectPath: '/Users/zhangjingwei/Desktop/AgentForge',
+    priority: 'high'
+  })
+
+  intelligentCoordinator.registerProject({
+    projectId: 'minnan',
+    projectName: '闽南语',
+    projectPath: '/Users/zhangjingwei/Desktop/闽南语',
+    priority: 'medium'
+  })
+
+  console.log('  ✓ AdaptiveScheduler: 智能频率调整（15秒-30分钟自适应）')
+  console.log('  ✓ IntelligentPriorityQueue: AI评分系统（Claude API）')
+  console.log('  ✓ IntelligentCoordinator: 智能任务选择器')
+  console.log('  ✓ 3个项目已注册到智能协调器')
+
+  // 监听智能协调器事件
+  intelligentCoordinator.on('issues-added', (data) => {
+    console.log(`📝 ${data.projectId}: 添加了 ${data.issueCount} 个问题到队列（总计: ${data.queueSize}）`)
+  })
+
+  intelligentCoordinator.on('task-selected', (data) => {
+    console.log(`🎯 智能选择: ${data.projectName} - ${data.issueType} (得分: ${data.score.toFixed(1)})`)
+  })
+
+  // 启动智能选择循环（每30秒选择一次任务）
+  const intelligentLoop = async () => {
+    try {
+      const task = await intelligentCoordinator.selectNextTask()
+      if (task) {
+        console.log(`\n🤖 [Prophet智能] 处理任务:`)
+        console.log(`   项目: ${task.project.projectName}`)
+        console.log(`   活跃度: ${(task.project.activityScore * 100).toFixed(0)}% (${task.project.activityLevel})`)
+        console.log(`   问题: [${task.issue.priority}] ${task.issue.message}`)
+        console.log(`   得分: ${task.issue.score}/100`)
+        console.log(`   原因: ${task.reason}`)
+        // TODO: 这里可以调用 AICoordinator 来实际处理任务
+      }
+    } catch (error: any) {
+      console.error(`⚠️  智能选择失败: ${error.message}`)
+    }
+
+    // 递归调用（30秒后）
+    setTimeout(intelligentLoop, 30 * 1000)
+  }
+
+  // 启动智能循环（延迟1分钟后开始，让系统先收集数据）
+  setTimeout(() => {
+    console.log('')
+    console.log('🧠 智能任务选择循环已启动（每30秒）')
+    intelligentLoop().catch(err => console.error('智能循环错误:', err))
+  }, 60 * 1000)
 
   // 启动服务器和编排器
   await server.start()

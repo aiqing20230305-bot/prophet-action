@@ -18,7 +18,7 @@
  * - 内存限制保护
  */
 
-import LRU from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 import { readFileSync, statSync } from 'fs'
 import { createHash } from 'crypto'
 
@@ -45,8 +45,8 @@ interface CachedFile {
 }
 
 export class SmartCache {
-  private fileCache: LRU<string, CachedFile>
-  private resultCache: LRU<string, any>
+  private fileCache: LRUCache<string, CachedFile>
+  private resultCache: LRUCache<string, any>
   private stats: CacheStats
   private options: Required<CacheOptions>
 
@@ -59,7 +59,7 @@ export class SmartCache {
     }
 
     // 文件内容缓存
-    this.fileCache = new LRU({
+    this.fileCache = new LRUCache({
       max: this.options.maxFiles,
       ttl: this.options.ttl,
       updateAgeOnGet: true,
@@ -72,7 +72,7 @@ export class SmartCache {
     })
 
     // 分析结果缓存
-    this.resultCache = new LRU({
+    this.resultCache = new LRUCache({
       max: this.options.maxFiles,
       ttl: this.options.ttl,
       updateAgeOnGet: true
