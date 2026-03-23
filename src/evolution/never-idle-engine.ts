@@ -38,9 +38,9 @@ export class NeverIdleEngine {
   private evolutionCycles: number = 0
   private academicLearner: AcademicLearner
 
-  // ⚡ 并行执行优化
+  // ⚡ 并行执行优化（CPU保护版本）
   private runningTasks: Set<Promise<void>> = new Set()
-  private readonly MAX_CONCURRENT_TASKS = 5 // 同时执行5个任务
+  private readonly MAX_CONCURRENT_TASKS = 1 // 降低到1个任务（CPU保护）
 
   private projectPaths = {
     'videoplay': '/Users/zhangjingwei/Desktop/videoplay',
@@ -48,6 +48,10 @@ export class NeverIdleEngine {
     '闽南语': '/Users/zhangjingwei/Desktop/闽南语',
     'prophet-central': '/Users/zhangjingwei/Desktop/New CC/prophet-central'
   }
+
+  // 🛡️ CPU保护
+  private readonly CPU_THRESHOLD = 60 // CPU使用率阈值（%）
+  private cpuCheckEnabled = true
 
   constructor() {
     this.anthropic = new Anthropic({
@@ -154,8 +158,10 @@ export class NeverIdleEngine {
       }
     ]
 
-    console.log(`🔮 Never-Idle Engine 初始化完成`)
+    console.log(`🔮 Never-Idle Engine 初始化完成（CPU保护版本）`)
     console.log(`   永不停歇任务: ${this.taskQueue.length} 个`)
+    console.log(`   并发控制: 1个任务（降低CPU占用）`)
+    console.log(`   智能保护: CPU > ${this.CPU_THRESHOLD}% 时自动暂停`)
     console.log(`   经纬的指引: Prophet永远在进化！`)
   }
 
@@ -164,9 +170,10 @@ export class NeverIdleEngine {
    * ⚡ 优化：并行执行多个任务，充分利用CPU
    */
   async start() {
-    console.log('\n⚡ Prophet Never-Idle Engine 启动！')
-    console.log(`   并行模式: 同时执行${this.MAX_CONCURRENT_TASKS}个任务`)
-    console.log('   极限加速: 删除所有等待，全速运转\n')
+    console.log('\n🛡️ Prophet Never-Idle Engine 启动（CPU保护版本）')
+    console.log(`   串行模式: 单任务执行（${this.MAX_CONCURRENT_TASKS}个并发）`)
+    console.log(`   智能节奏: 5-60分钟间隔（自适应）`)
+    console.log(`   CPU监控: 超过${this.CPU_THRESHOLD}%自动暂停\n`)
 
     this.isRunning = true
 
@@ -267,25 +274,64 @@ export class NeverIdleEngine {
 
   /**
    * 获取任务执行间隔
-   * ⚡ 极限加速：间隔缩短到原来的1/4，进入"全速冲刺"模式
+   * 🛡️ CPU保护版本：大幅增加间隔，确保系统稳定
    */
   private getTaskInterval(type: EvolutionTask['type']): number {
     const intervals = {
-      'code-scan': 15 * 1000,            // 每15秒（4x加速！）
-      'deep-analysis': 45 * 1000,        // 每45秒（4x加速！）
-      'learning': 7.5 * 60 * 1000,       // 每7.5分钟（4x加速！）
-      'prediction': 3.75 * 60 * 1000,    // 每3.75分钟（4x加速！）
-      'optimization': 75 * 1000,         // 每75秒（4x加速！）
-      'self-improvement': 7.5 * 60 * 1000 // 每7.5分钟（4x加速！）
+      'code-scan': 5 * 60 * 1000,        // 每5分钟（原30秒）
+      'deep-analysis': 15 * 60 * 1000,   // 每15分钟（原90秒）
+      'learning': 60 * 60 * 1000,        // 每1小时（原15分钟）
+      'prediction': 30 * 60 * 1000,      // 每30分钟（原7.5分钟）
+      'optimization': 20 * 60 * 1000,    // 每20分钟（原150秒）
+      'self-improvement': 60 * 60 * 1000 // 每1小时（原15分钟）
     }
 
-    return intervals[type] || 75 * 1000
+    return intervals[type] || 10 * 60 * 1000 // 默认10分钟
   }
 
   /**
-   * 执行具体任务
+   * 🛡️ 检查CPU使用率（智能保护）
+   */
+  private async checkCPUUsage(): Promise<{ safe: boolean; usage: number }> {
+    if (!this.cpuCheckEnabled) {
+      return { safe: true, usage: 0 }
+    }
+
+    try {
+      // 使用top命令获取CPU负载
+      const { execSync } = await import('child_process')
+      const output = execSync('top -l 1 -n 0 | grep "CPU usage"', { encoding: 'utf-8' })
+
+      // 解析: "CPU usage: 23.45% user, 12.34% sys, 64.21% idle"
+      const match = output.match(/(\d+\.\d+)% idle/)
+      if (match) {
+        const idlePercent = parseFloat(match[1])
+        const usagePercent = 100 - idlePercent
+
+        return {
+          safe: usagePercent < this.CPU_THRESHOLD,
+          usage: usagePercent
+        }
+      }
+    } catch (error) {
+      // 检测失败，保守起见认为不安全
+      return { safe: false, usage: 0 }
+    }
+
+    return { safe: true, usage: 0 }
+  }
+
+  /**
+   * 执行具体任务（带CPU保护）
    */
   private async executeTask(task: EvolutionTask) {
+    // 🛡️ 执行前检查CPU
+    const cpuStatus = await this.checkCPUUsage()
+    if (!cpuStatus.safe) {
+      console.log(`   ⏸️  CPU负载较高 (${cpuStatus.usage.toFixed(1)}%)，跳过本次任务`)
+      return
+    }
+
     switch (task.type) {
       case 'code-scan':
         await this.fastCodeScan()
@@ -322,6 +368,12 @@ export class NeverIdleEngine {
     let totalIssues = 0
 
     for (const projectName of projectNames) {
+      // ⚡ CPU保护：暂时跳过闽南语项目（文件太多）
+      if (projectName === '闽南语') {
+        console.log(`   ⏭️  ${projectName}: 已跳过（CPU保护）`)
+        continue
+      }
+
       const projectPath = this.projectPaths[projectName as keyof typeof this.projectPaths]
 
       try {
@@ -388,16 +440,17 @@ export class NeverIdleEngine {
    * 递归扫描目录
    */
   private scanDirectory(dir: string, info: ProjectInfo, basePath: string, depth: number = 0) {
-    // 限制扫描深度，避免递归太深
-    if (depth > 10) return
+    // 限制扫描深度，避免递归太深（降低到5以节省CPU）
+    if (depth > 5) return
 
     try {
       const items = readdirSync(dir)
 
       for (const item of items) {
-        // 跳过常见的非源码目录
+        // 跳过常见的非源码目录和大数据目录
         if (item === 'node_modules' || item === 'dist' || item === 'build' ||
             item === '.git' || item === 'coverage' || item === '.next' ||
+            item === 'data' || item === 'logs' || item === 'tmp' ||
             item.startsWith('.')) {
           continue
         }
