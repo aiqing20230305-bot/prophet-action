@@ -13,7 +13,14 @@
     "start": "node dist/index.js",
     "dashboard": "tsx src/cli/dashboard-server.ts",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "prophet:test": "prophet test",
+    "prophet:status": "prophet status",
+    "test": "tsx test-runner.ts",
+    "test:phase16": "tsx test-phase16-pattern-discovery.ts",
+    "test:scout": "tsx test-github-scout.ts",
+    "test:analyzer": "tsx test-intelligence-analyzer.ts",
+    "test:all": "for f in test-*.ts; do echo \"Running $f...\"; tsx \"$f\" || exit 1; done"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -30,6 +37,7 @@
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.2.7",
+    "simple-git": "^3.33.0",
     "socket.io": "^4.6.1",
     "socket.io-client": "^4.8.3",
     "uuid": "^9.0.1"
@@ -40,7 +48,7 @@
     "@types/uuid": "^9.0.8",
     "prisma": "^5.9.1",
     "tsx": "^4.7.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.0.0"
