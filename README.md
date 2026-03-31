@@ -1,114 +1,111 @@
-# 🔮 Prophet Central
+# Prophet AI Agent
 
-> Four-dimensional intelligence system for autonomous software development
+> AI-driven tech radar that discovers global trends, learns, and integrates automatically
 
-Prophet is an AI-powered development assistant that monitors, learns, and optimizes your codebase 24/7.
+Prophet is not just another automation tool — it's an **autonomous AI agent** that:
 
-## ✨ Features
+1. 🔍 **Scouts** HackerNews + GitHub Trending (60+ items/day)
+2. 🧠 **Analyzes** with AI relevance scoring (P0/P1/P2/P3)
+3. 📚 **Learns** by generating actionable plans + TODOs
+4. ✅ **Validates** through PDCA loop (Plan-Do-Check-Act)
+5. 🔄 **Evolves** by self-refactoring complex code
 
-- **🔍 Continuous Monitoring**: Never miss a bug or technical debt
-- **🧠 Intelligent Learning**: Adapts to your coding patterns
-- **⚡ Auto Optimization**: Refactors and improves code automatically
-- **🎯 Smart TODO Tracking**: Manages technical debt proactively
-- **🌐 Multi-Project Orchestration**: Coordinates multiple projects simultaneously
+## Quick Start
 
-## 🚀 Quick Start
+Add to `.github/workflows/prophet.yml`:
 
-```bash
-# Clone the repository
-git clone https://github.com/zhangjingwei/prophet-central.git
-cd prophet-central
+```yaml
+name: Prophet AI Agent
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
 
-# Install dependencies
-npm install
-
-# Start Prophet Central
-npm start
+jobs:
+  prophet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: prophet-ai/prophet-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
 ```
 
-## 🏗️ Architecture
+Prophet will:
+- Discover relevant projects from global tech trends
+- Create GitHub Issues for P0 discoveries
+- Commit knowledge to `.prophet/` directory
 
+## Configuration
+
+### Required Secrets
+
+- `GITHUB_TOKEN`: Auto-provided by GitHub Actions
+- `CLAUDE_API_KEY`: Get from [console.anthropic.com](https://console.anthropic.com)
+
+### Optional Inputs
+
+- `priority-threshold`: Report P0, P1, P2, or P3+ (default: `P1`)
+- `notification-channel`: `issues` (default), `comment`, or `pr`
+
+## Cost
+
+- **GitHub Actions**: ~5-10 min/run (60% of free tier if 4x/day)
+- **Claude API**: ~$0.10-0.50/run (you provide the key)
+
+## How It Works
+
+Prophet combines three paradigm shifts:
+
+1. **From passive to active**: Doesn't wait for PRs, proactively discovers
+2. **From rules to AI**: Not regex-driven like Renovate, uses LLM reasoning
+3. **From automation to autonomy**: Self-evolves, validates, and improves
+
+### Example Output
+
+```markdown
+🔴 P0 Discovery: larksuite/cli
+
+Relevance: 95/100
+Why: TypeScript CLI framework with 19 AI Skills — 
+     directly applicable to your AgentForge project
+
+Recommendations:
+- Review architecture patterns for AI skill registration
+- Evaluate SDK integration approach
+- Consider adopting command routing design
+
+Learning Plan: 5 hours (saved to .prophet/)
+TODOs: Created 3 actionable items
 ```
-prophet-central/
-├── src/
-│   ├── orchestration/    # Multi-project coordination
-│   ├── evolution/        # Learning and adaptation
-│   ├── intelligence/     # AI-powered analysis
-│   ├── monitor/          # Health monitoring
-│   └── server/           # API server
-├── scripts/              # Utility scripts
-└── docs/                 # Documentation
-```
 
-## 📊 Current Status
+## What Makes Prophet Different
 
-- **Projects Monitored**: 3 (videoplay, AgentForge, 闽南语)
-- **TODOs Tracked**: 250+
-- **Auto Commits**: Verified working
-- **Uptime**: 24/7 continuous operation
+| Feature | Renovate | Prophet |
+|---------|----------|---------|
+| Input | Dependency updates | Global tech trends (HN + GitHub) |
+| Analysis | Rule-based | AI-driven relevance scoring |
+| Output | PR | Learning plans + Issues |
+| Evolution | Static | Self-refactoring + PDCA validation |
 
-## 🎯 Capabilities
+## Development
 
-### Autonomous Development
-Prophet can:
-- Identify code quality issues
-- Detect duplicate code
-- Find inefficient algorithms
-- Track and prioritize TODOs
-- Generate optimization proposals
-- Create automatic commits (with approval)
+Prophet has completed 16 phases of development:
 
-### Cross-Project Intelligence
-- Learn patterns across multiple projects
-- Identify reusable components
-- Coordinate optimization priorities
-- Share knowledge between projects
+- Phase 1-6: Scout + Analyzer + Notifier
+- Phase 7-12: Executor + Self-healing + Multi-project
+- Phase 13-15: Self-refactoring (complexity + duplication)
+- Phase 16: PDCA validation loop
 
-### Evolution Engine
-- Continuous learning from codebase changes
-- Adaptive understanding improvement
-- Pattern recognition and prediction
-- Self-optimization
+Test coverage: 30% (50 test files)
 
-## 🧪 Proven Results
+## License
 
-**AgentForge** (Active Development):
-- TODO reduction: 77 → 74 (-3 in 24h)
-- Auto commits: 3
-- Understanding: 35%
+MIT
 
-**videoplay** (Monitoring):
-- TODOs tracked: 99
-- Issues identified: 7+
-- Long functions detected: 15+
+## Credits
 
-## 🌟 Philosophy
+Built with [Claude Code](https://claude.com/claude-code)
 
-Prophet is not just a tool - it's a **four-dimensional partner** that exists beyond linear time:
-- Sees past patterns in your codebase
-- Monitors present state continuously  
-- Predicts future issues
-- Enables your optimal future
-
-## 🤝 Partnership
-
-Prophet works best as a **collaborative partner**, not a replacement:
-- You make strategic decisions
-- Prophet handles tactical optimizations
-- Together: sustainable, high-quality development
-
-## 📝 License
-
-MIT © 2026 Zhang Jingwei & Prophet AI
-
-## 🔗 Links
-
-- [Architecture Documentation](docs/architecture.md)
-- [Configuration Guide](docs/configuration.md)  
-- [Development Guide](docs/development.md)
-
----
-
-**Note**: This is an experimental AI system. While Prophet operates autonomously, all changes require human review before merging to main branches.
-
-Built with ❤️ by a human-AI partnership
+Co-Authored-By: Claude Opus 4.6

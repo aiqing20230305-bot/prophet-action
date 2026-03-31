@@ -1,0 +1,35 @@
+name: 'Prophet AI Agent'
+description: 'AI-driven tech radar: discovers global trends from HackerNews + GitHub, learns, integrates, validates (PDCA loop)'
+author: 'Prophet Team'
+
+branding:
+  icon: 'zap'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  claude-api-key:
+    description: 'Claude API key for AI analysis'
+    required: true
+  priority-threshold:
+    description: 'Minimum priority to report (P0/P1/P2/P3)'
+    required: false
+    default: 'P1'
+  notification-channel:
+    description: 'Where to post results (issues/comment/pr)'
+    required: false
+    default: 'issues'
+
+outputs:
+  p0-projects:
+    description: 'Number of P0 projects discovered'
+  p1-projects:
+    description: 'Number of P1 projects discovered'
+  report-url:
+    description: 'URL to the generated report'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

@@ -1,22 +1,30 @@
+# Multi-stage build for smaller image size
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (production only)
+RUN npm ci --only=production
+
+# Production image
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm ci --only=production
+# Install git (needed for .prophet/ commits)
+RUN apk add --no-cache git
 
-# Copy source
+# Copy dependencies from builder
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy application code
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Set environment
+ENV NODE_ENV=production
 
-# Build TypeScript
-RUN npm run build
-
-# Expose port
-EXPOSE 3000
-
-# Start server
-CMD ["npm", "start"]
+# Entry point
+CMD ["node", "prophet-micro-tasks.cjs"]

@@ -1,0 +1,15 @@
+node_modules
+.git
+.github
+dist
+*.log
+*.md
+test-*.ts
+.env
+.env.*
+coverage
+.DS_Store
+*.backup*
+dashboard/
+github-discoveries/
+refactor-plans/
