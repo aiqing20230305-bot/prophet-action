@@ -1,0 +1,28 @@
+# Basic Prophet Setup
+# Runs every 6 hours, creates GitHub Issues for P0 discoveries
+
+name: Prophet AI Agent
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  prophet:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # For .prophet/ auto-commit
+      issues: write    # For creating discovery issues
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Prophet AI Agent
+        uses: aiqing20230305-bot/prophet-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          priority-threshold: 'P1'
+          notification-channel: 'issues'

@@ -1,5 +1,9 @@
 # Prophet AI Agent
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Prophet%20AI%20Agent-blue?logo=github)](https://github.com/marketplace/actions/prophet-ai-agent)
+[![Build Status](https://github.com/aiqing20230305-bot/prophet-action/workflows/Build%20and%20Test/badge.svg)](https://github.com/aiqing20230305-bot/prophet-action/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 > AI-driven tech radar that discovers global trends, learns, and integrates automatically
 
 Prophet is not just another automation tool — it's an **autonomous AI agent** that:
@@ -11,6 +15,15 @@ Prophet is not just another automation tool — it's an **autonomous AI agent** 
 5. 🔄 **Evolves** by self-refactoring complex code
 
 ## Quick Start
+
+**Option 1**: Use an example workflow (recommended)
+
+Copy one of the [example workflows](./examples/) to `.github/workflows/prophet.yml`:
+- [basic.yml](./examples/basic.yml) - Every 6 hours, P1+ discoveries
+- [advanced.yml](./examples/advanced.yml) - 4x/day with Slack notifications
+- [minimal.yml](./examples/minimal.yml) - Weekly, P0 only
+
+**Option 2**: Minimal setup
 
 Add to `.github/workflows/prophet.yml`:
 
@@ -34,8 +47,10 @@ jobs:
 
 Prophet will:
 - Discover relevant projects from global tech trends
-- Create GitHub Issues for P0 discoveries
+- Create GitHub Issues for P0/P1 discoveries
 - Commit knowledge to `.prophet/` directory
+
+**See more**: [Example workflows](./examples/) with different schedules and notifications
 
 ## Configuration
 

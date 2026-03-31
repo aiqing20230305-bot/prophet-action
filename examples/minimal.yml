@@ -1,0 +1,24 @@
+# Minimal Prophet Setup
+# Weekly check, only P0 alerts
+
+name: Prophet AI Agent (Weekly)
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  prophet:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aiqing20230305-bot/prophet-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          priority-threshold: 'P0'

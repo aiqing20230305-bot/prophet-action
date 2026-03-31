@@ -1,0 +1,65 @@
+# Advanced Prophet Setup
+# Daily runs with Slack notifications and custom scheduling
+
+name: Prophet AI Agent (Advanced)
+
+on:
+  schedule:
+    # Run 4 times per day (spread evenly)
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+  # Also run on push to main (detect new code context)
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'package.json'
+
+jobs:
+  prophet:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full git history for better context
+
+      - name: Run Prophet AI Agent
+        uses: aiqing20230305-bot/prophet-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          priority-threshold: 'P0'  # Only P0 (highest priority)
+          notification-channel: 'pr' # Create PRs instead of issues
+
+      - name: Upload Prophet state
+        uses: actions/upload-artifact@v4
+        with:
+          name: prophet-state
+          path: .prophet/
+          retention-days: 30
+
+      - name: Notify Slack on P0 discoveries
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "🔴 Prophet discovered P0 projects!",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Prophet AI Agent* found high-priority trends\n\nCheck <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
